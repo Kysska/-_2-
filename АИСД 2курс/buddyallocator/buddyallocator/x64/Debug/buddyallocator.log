@@ -1,0 +1,18 @@
+﻿  buddyallocator.cpp
+C:\Users\Kysska_\source\repos\buddyallocator\buddyallocator\buddyallocator.cpp(18,11): warning C4244: инициализация: преобразование "double" в "int", возможна потеря данных
+C:\Users\Kysska_\source\repos\buddyallocator\buddyallocator\buddyallocator.cpp(32,11): warning C4244: инициализация: преобразование "double" в "int", возможна потеря данных
+C:\Users\Kysska_\source\repos\buddyallocator\buddyallocator\buddyallocator.cpp(124,11): warning C4244: инициализация: преобразование "double" в "int", возможна потеря данных
+C:\Users\Kysska_\source\repos\buddyallocator\buddyallocator\buddyallocator.cpp(139,27): warning C4244: =: преобразование "double" в "int", возможна потеря данных
+C:\Users\Kysska_\source\repos\buddyallocator\buddyallocator\buddyallocator.cpp(141,27): warning C4244: =: преобразование "double" в "int", возможна потеря данных
+C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Tools\MSVC\14.31.31103\include\utility(247,61): warning C4244: инициализация: преобразование "_Ty" в "_Ty2", возможна потеря данных
+          with
+          [
+              _Ty=double
+          ]
+          and
+          [
+              _Ty2=int
+          ]
+C:\Users\Kysska_\source\repos\buddyallocator\buddyallocator\buddyallocator.cpp(130): message : выполняется компиляция ссылки на экземпляр шаблон функции "std::pair<int,int>::pair<int,double,0>(std::pair<int,double> &&) noexcept"
+C:\Users\Kysska_\source\repos\buddyallocator\buddyallocator\buddyallocator.cpp(129): message : выполняется компиляция ссылки на экземпляр шаблон функции "std::pair<int,int>::pair<int,double,0>(std::pair<int,double> &&) noexcept"
+  buddyallocator.vcxproj -> C:\Users\Kysska_\source\repos\buddyallocator\x64\Debug\buddyallocator.exe
