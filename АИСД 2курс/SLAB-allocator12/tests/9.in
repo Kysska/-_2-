@@ -1,0 +1,5 @@
+1
+alloc(1)
+alloc(2)
+free(2)
+free(1)

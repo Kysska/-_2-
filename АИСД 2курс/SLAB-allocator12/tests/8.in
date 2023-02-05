@@ -1,0 +1,9 @@
+12345
+alloc(1)
+free(1)
+alloc(2)
+free(2)
+alloc(3)
+free(3)
+alloc(4)
+free(4)

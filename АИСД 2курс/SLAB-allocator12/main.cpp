@@ -3,23 +3,15 @@
 #include "Slab.h"
 #include <chrono>
 #include <iostream>
+#include <fstream>
+#include <string>
+#include <sstream>
+#include <map>
 
 #define N 1000000
 using namespace std::chrono;
 const int kMillion = 1e6;
 
-template<typename Func>
-long long calculate_execution_time(Func funcion) {
-	const size_t iterations = 1000;
-	long long duration = 0;
-	for (size_t i = 0; i < iterations; i++) {
-		auto start = high_resolution_clock::now();
-		funcion();
-		auto stop = high_resolution_clock::now();
-		duration += duration_cast<nanoseconds>(stop - start).count();
-	}
-	return duration / iterations;
-}
 void TestTimeSlab(size_t allocation_size) {
 	const int num = 10000;
 	cache cache;
@@ -61,13 +53,53 @@ void benchmark_allocation_size(size_t allocation_size) {
 	TestTimeMalloc(allocation_size);
 
 
-	//if (my_malloc_time > malloc_time) {
-	//	printf("custom_malloc is %.2f times slower than malloc\n", (double)my_malloc_time / malloc_time);
-	//}
-	//else {
-	//	printf("custom_malloc is %.2f times faster than malloc\n", (double)malloc_time / my_malloc_time);
-	//}
+
 	printf("------------------------------------------------\n");
+}
+void Test(int count_test) {
+	int ok = 0;
+	int wa = 0;
+	std::map <char, void*> mp;
+	for (int i = 1; i <= count_test; i++) {
+		cache cache;
+		std::string numtest = std::to_string(i);
+		std::ifstream fin("./tests/" + std::to_string(i) + ".in");
+		std::ofstream fout("./tests/" + std::to_string(i) + ".out");
+
+		std::string line;
+		std::string allocsize;
+		getline(fin, allocsize);
+		std::istringstream iss(allocsize);
+		size_t size;
+		iss >> size;
+
+		cache_setup(&cache, size);
+
+		if (fin.is_open()) {
+			while (getline(fin, line)) {
+				std::cout << line << " ";
+				if (line.find("alloc") != std::string::npos) {
+					size_t found = line.find("(");
+					if (found != std::string::npos) {
+						char countalloc = line[found + 1];
+						void* ptr = cache_alloc(&cache);
+						mp[countalloc] = ptr;
+					}
+				}
+				else {
+					size_t found = line.find("(");
+					if (found != std::string::npos) {
+						char countfree = line[found + 1];
+						if (mp.count(countfree) != 0) {
+							void* ptr1 = mp[countfree];
+							cache_free(&cache, ptr1);
+						}
+						else continue;
+					}
+				}
+			}
+		}
+	}
 }
 
 void Test1() {
@@ -85,16 +117,12 @@ void Test1() {
 void Test2() {
 	cache cache;
 	void* ptr1, * ptr2, * ptr3;
-	cache_setup(&cache, 2000000);
+	cache_setup(&cache, 16);
 	ptr1 = cache_alloc(&cache);
 	ptr2 = cache_alloc(&cache);
-	cache_info(&cache);
-	slab_info(&cache);
 	cache_free(&cache, ptr2);
 	cache_info(&cache);
 	cache_shrink(&cache);
-
-
 }
 void Test3() {
 	cache cache;
@@ -115,7 +143,6 @@ int main()
 	//benchmark_allocation_size(4096);
 	//benchmark_allocation_size(32768);
 
-	//test();
 	Test2();
 
 
