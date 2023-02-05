@@ -208,8 +208,16 @@ void cache_shrink(cache *cache)
   cache->free = NULL;
 }
 static cache* allCaches = nullptr;
+void slab_print(SLAB* slab)
+{
+    std::cout << "\t\t->Info slab:" << std::endl;
+    std::cout << "adress:\t" << slab << std::endl;
+    std::cout << "next slab:\t" << slab->next << std::endl;
+    std::cout << "prev slab:\t" << slab->prev << std::endl;
+    std::cout << "size:\t\t" << slab->size << std::endl;
+}
 
-void cache_info(cache *cache) {
+void cache_info(cache* cache) {
     if (cache == nullptr)
     {
         std::cout << "NullPointer passed as argument" << std::endl;
@@ -223,7 +231,6 @@ void cache_info(cache *cache) {
         i++;
         s = s->next;
     }
-    std::cout <<"free slab" << i << " ";
 
     s = cache->partlyFree;
     while (s != nullptr)
@@ -231,25 +238,56 @@ void cache_info(cache *cache) {
         i++;
         s = s->next;
     }
-    std::cout << "partltfree slab" << i << " ";
 
     s = cache->booked;
     while (s != nullptr)
     {
         i++;
         s = s->next;
-        
+
     }
-    std::cout << "booked slab" << i << " ";
 
     unsigned int cacheSize = i * (1 << cache->slab_order);
 
     std::cout << "*** CACHE INFO: ***" << std::endl
+        << "adress:\t" << cache << std::endl
+        << "booked:\t" << cache->booked << std::endl
+        << "partlyfree:\t" << cache->partlyFree << std::endl
+        << "free:\t" << cache->free << std::endl
         << "Size of one object (in bytes):\t" << cache->object_size << std::endl
         << "Size of cache (in blocks):\t" << cacheSize << std::endl
         << "Number of slabs:\t\t" << i << std::endl
         << "Number of objects in one slab:\t" << cache->slab_objects << std::endl;
 
+
+}
+void slab_info(cache* cache) {
+    if (cache == nullptr)
+    {
+        std::cout << "NullPointer passed as argument" << std::endl;
+        return;
+    }
+    SLAB* s = cache->free;
+    while (s != nullptr)
+    {
+        slab_print(s);
+        s = s->next;
+    }
+
+    s = cache->partlyFree;
+    while (s != nullptr)
+    {
+        slab_print(s);
+        s = s->next;
+    }
+
+    s = cache->booked;
+    while (s != nullptr)
+    {
+        slab_print(s);
+        s = s->next;
+
+    }
 
 }
 
