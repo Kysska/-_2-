@@ -32,5 +32,6 @@ void *cache_alloc(cache *cache); // Allocate one object from cache
 void cache_free(cache *cache, void *ptr); // Deallocate one object from cache
 void cache_shrink(cache *cache); // Shrink cache
 void cache_info(cache* cache); 
+void cache_info_infile(cache* cache, int k);
 void slab_info(cache* cache);
 void cache_allInfo(cache* cache);
