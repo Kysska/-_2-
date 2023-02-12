@@ -18,6 +18,7 @@ void cache_setup(cache* cache, size_t object_size)
     cache->partlyFree = NULL; //частично занятый
     cache->booked = NULL; //занятый
     cache->object_size = std::max(sizeof(MEMPART), object_size); //размаер объекта в кеше
+    cache->slab_count = 0;
     //cache->slab_order = 0;
    /* cache->slab_order = std::min(10, nearest_pow2(object_size) - 5);*/ //используемый размер slab
     int order = 0;
@@ -95,6 +96,7 @@ bool CreateNewSlab(cache* cache)
     tmp->next = cache->free;
     tmp->prev = NULL;
     cache->free = tmp;
+    cache->slab_count += 1;
 
     return true;
 }
@@ -281,10 +283,11 @@ void cache_info(cache* cache) {
         << "partlyfree:\t" << cache->partlyFree << std::endl
         << "free:\t" << cache->free << std::endl
         << "Size of one object (in bytes):\t" << cache->object_size << std::endl
+        << "Count slabs:\t" << cache->slab_count << std::endl
         << "Size of cache (in blocks):\t" << cacheSize << std::endl
         << "Number of slabs:\t\t" << i << std::endl
-        << "Number of objects in one slab:\t" << cache->slab_objects << std::endl
-        << "Slab order\t" << cache->slab_order << std::endl;
+        << "Objects per slab:\t" << cache->slab_objects << std::endl
+        << "Pages per slab:\t" << 1 * pow(2,(cache->slab_order)) << std::endl;
 
 
 }
@@ -329,9 +332,9 @@ void cache_info_infile(cache* cache, int k) {
         << "free:\t" << cache->free << std::endl
         << "Size of one object (in bytes):\t" << cache->object_size << std::endl
         << "Size of cache (in blocks):\t" << cacheSize << std::endl
-        << "Number of slabs:\t\t" << i << std::endl
-        << "Number of objects in one slab:\t" << cache->slab_objects << std::endl
-        << "Slab order\t" << cache->slab_order << std::endl;
+        << "Number of slabs:\t\t" << i << std::endl //количество slab
+        << "Objects per slab:\t" << cache->slab_objects << std::endl
+        << "Pages per slab:\t" << 1 * pow(2, (cache->slab_order)) << std::endl;
 
     fout.close();
 }

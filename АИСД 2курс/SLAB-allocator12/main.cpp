@@ -7,6 +7,7 @@
 #include <string>
 #include <sstream>
 #include <map>
+#include <ctime>
 
 #define N 1000000
 using namespace std::chrono;
@@ -56,36 +57,82 @@ void benchmark_allocation_size(size_t allocation_size) {
 
 	printf("------------------------------------------------\n");
 }
-void print_state(const std::ios& stream) {
-	std::cout << " good()=" << stream.good();
-	std::cout << " eof()=" << stream.eof();
-	std::cout << " fail()=" << stream.fail();
-	std::cout << " bad()=" << stream.bad();
-}
-void Test(int count_test) {
-	int ok = 0;
-	int wa = 0;
-	std::map <char, void*> mp;
+void generation_test(int count_test) {
 	for (int i = 1; i <= count_test; i++) {
 		cache cache;
+		std::map <int, void*> mp;
+		std::string numtest = std::to_string(i);
+		std::ofstream fin("./tests/generation_test/input_" + std::to_string(i) + ".in");
+		std::ofstream fout("./tests/generation_test/output_" + std::to_string(i) + ".out");
+		srand((unsigned int)time(NULL));
+		int a = rand() % 4000000 + 16; //размер кэша
+		cache_setup(&cache, a);
+		std::cout << a << " ";
+		fin << a << "\n";
+		int b = rand() % 1000 + 1; //количество операций
+		std::cout << b << " ";
+		for (int i = 1; i <= b; i++) {
+			int c = rand() % 2 + 1;
+			std::cout << c << " ";
+			if (c == 1) {
+				fin << "alloc(" << i << ")\n";
+				void * ptr1 = cache_alloc(&cache);
+				mp[i] = ptr1;
+				std::cout << mp[i] << " ";
+			}
+			else if (c == 2) {
+				std::cout << mp.size() << " ";
+				if (mp.size() == 0) {
+					continue;
+				}
+				int d = rand() % mp.size();
+				std::cout << d << " ";
+				fin << "free(" << d << ")\n";
+				
+				cache_free(&cache, mp[d]);				
+				std::cout << mp[d] << " ";
+				mp.erase(d);
+
+			}
+		}
+		cache_info_infile(&cache, i);
+		cache_release(&cache);
+		fin.close();
+		fout.close();
+	}
+}
+void Test(int count_test) {
+	
+	for (int i = 1; i <= count_test; i++) {
+		cache cache;
+		std::map <char, void*> mp;
 		std::string numtest = std::to_string(i);
 		std::ifstream fin("./tests/" + std::to_string(i) + ".in");
 		std::ofstream fout("./tests/" + std::to_string(i) + ".out");
 
 		std::string line;
 		std::string allocsize;
-		getline(fin, allocsize);
-		std::istringstream iss(allocsize);
-		size_t size;
-		iss >> size;
-		if (size > 40000000) {
-			size = 4000000;
-		}
-		else if (size <= 0) {
-			size = 16;
-		}
-		cache_setup(&cache, size);
+		bool flag = false;
 		if (fin.is_open()) {
+			getline(fin, allocsize);
+			std::istringstream iss(allocsize);
+			size_t size;
+			iss >> size;
+			if (size <= 0) {
+				size = 16;
+			}
+			else if (size > 4000000) {
+				size = 4000000;
+			}
+			cache_setup(&cache, size);
+		}
+		else {
+			std::cout << i <<" test : Error: The file does not open" << std::endl;
+			continue;
+		}
+
+		if (fin.is_open()) {
+			auto start1 = std::chrono::high_resolution_clock::now();
 			while (getline(fin, line)) {
 				if (line.find("alloc") != std::string::npos) {
 					size_t found = line.find("(");
@@ -96,9 +143,11 @@ void Test(int count_test) {
 							mp[countalloc] = ptr;
 						}
 						catch (...) {
-							std::cout << "Ошибка в освобождение";
+							flag = true;
+							std::cout << "test " << i << ": error in execution. Error: unidentified problem " << std::endl;
+							break;
 						}
-
+						
 					}
 				}
 				else if(line.find("free") != std::string::npos) {
@@ -107,22 +156,45 @@ void Test(int count_test) {
 						char countfree = line[found + 1];
 						if (mp.count(countfree) != 0) {
 							void* ptr1 = mp[countfree];
-							if (ptr1 == nullptr) {
-								std::cout << "Nullptr" << std::endl;
+							try {
+								if (ptr1 == NULL) {
+									throw "Error: ptr is null";
+								}
+								cache_free(&cache, ptr1);
 							}
-							else cache_free(&cache, ptr1);
-
+							catch (const char* e) {
+								flag = true;
+								std::cout << "test " << i << ": error in execution. " << e << std::endl;
+								break;
+							}
+							catch (...) {
+								flag = true;
+								std::cout << "test " << i << ": error in execution. Error: unidentified problem " << std::endl;
+								break;
+							}
 						}
 						else continue;
 					}
 				}
 				else {
-					cache_release(&cache);
+					try {
+						cache_release(&cache);
+					}
+					catch (...) {
+						flag = true;
+						std::cout << "test " << i << ": error in execution. Error: unidentified problem " << std::endl;
+						break;
+					}
 				}
 			}
+			if (flag == false) {
+               cache_info_infile(&cache, i);
+			   auto end1 = std::chrono::high_resolution_clock::now();
+			   auto dur1 = std::chrono::duration_cast<std::chrono::microseconds>(end1 - start1);
+			   std::cout << "test " << i << ": successful. time of work:" << dur1.count() << " ms." << std::endl;
+			}	
+		    cache_release(&cache);
 		}
-
-		cache_info_infile(&cache, i);
 		fin.close();
 		fout.close();
 	}
@@ -132,7 +204,7 @@ void Test(int count_test) {
 void Test1() {
 	cache cache;
 	std::stringstream stream;
-	cache_setup(&cache, 1024 * 8 * 1024);
+	cache_setup(&cache, 192);
 	void* ptr1 = cache_alloc(&cache);
 	void* ptr2 = cache_alloc(&cache);
 	cache_free(&cache, ptr2);
@@ -144,13 +216,12 @@ void Test1() {
 }
 void Test2() {
 	cache cache;
-	void* ptr1, * ptr2, * ptr3;
-	cache_setup(&cache, 3);
+	void* ptr1, * ptr2, * ptr3, *ptr4, *ptr5, *ptr6;
+	cache_setup(&cache, 335);
 	ptr1 = cache_alloc(&cache);
 	ptr2 = cache_alloc(&cache);
-	cache_free(&cache, ptr2);
+	cache_free(&cache, ptr1);
 	cache_info(&cache);
-	cache_shrink(&cache);
 }
 void Test3() {
 	cache cache;
@@ -171,8 +242,9 @@ int main()
 	//benchmark_allocation_size(4096);
 	//benchmark_allocation_size(32768);
 
-	//Test(10);
-	Test(10);
+	//Test1();
+	/*Test(12);*/
+	generation_test(1);
 
 	return 0;
 }

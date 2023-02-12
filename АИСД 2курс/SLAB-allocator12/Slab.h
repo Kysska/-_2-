@@ -22,7 +22,8 @@ struct cache
   SLAB *booked; //list of full slabs
   size_t object_size; //size of one object
   int slab_order; //buddy allocat
-  size_t slab_objects; //количество объектов в одной плите
+  size_t slab_objects;//количество объектов в одной плите
+  size_t slab_count;
   cache *next;
 };
 
