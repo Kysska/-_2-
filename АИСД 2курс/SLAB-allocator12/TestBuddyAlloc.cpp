@@ -4,7 +4,7 @@
 
 void *alloc_slab(int order)
 {
-  return _aligned_malloc(1 << (order + 12), 1 << (order + 12));
+  return _aligned_malloc(1 << (order + 12), 1 << (order + 12)); //√арантируетс€, что возвращаемый указатель будет выровнен на размер аллоцируемого участка
 }
 
 void free_slab(void *slab)

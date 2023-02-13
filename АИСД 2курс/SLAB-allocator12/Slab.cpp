@@ -136,6 +136,10 @@ void MoveFirstElement(SLAB** from, SLAB** to)
     *to = tmp;
 }
 //Функция аллокации памяти из кеширующего аллокатора.
+/**
+ * Функция аллокации памяти из кеширующего аллокатора.
+ * Должна возвращать указатель на участок памяти размера
+ * как минимум object_size байт (см cache_setup).**/
 void* cache_alloc(cache* cache)
 {
     if (cache->partlyFree != NULL)
@@ -202,6 +206,11 @@ size_t GetNLowBits(size_t x, size_t n)
     return x & (~((1 << n) - 1));
 }
 //Функция освобождения памяти назад в кеширующий аллокатор.
+/**
+ * Функция освобождения памяти назад в кеширующий аллокатор.
+ * Гарантируется, что ptr - указатель ранее возвращенный из
+ * cache_alloc.
+ **/
 void cache_free(cache* cache, void* ptr)
 {
     SLAB* slab = (SLAB*)GetNLowBits((size_t)ptr, (size_t)(cache->slab_order + 12));
