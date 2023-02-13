@@ -1,5 +1,4 @@
 #include <cstdlib>
-#include <algorithm>
 #include "Slab.h"
 #include <chrono>
 #include <iostream>
@@ -8,10 +7,19 @@
 #include <sstream>
 #include <map>
 #include <ctime>
+#include <random>
 
+std::default_random_engine gen;
 #define N 1000000
 using namespace std::chrono;
 const int kMillion = 1e6;
+
+int random(int low, int high)
+{
+	std::uniform_int_distribution<> dist(low, high);
+	return dist(gen);
+}
+
 
 void TestTimeSlab(size_t allocation_size) {
 	const int num = 10000;
@@ -61,41 +69,58 @@ void generation_test(int count_test) {
 	for (int i = 1; i <= count_test; i++) {
 		cache cache;
 		std::map <int, void*> mp;
+		int flag = false;
 		std::string numtest = std::to_string(i);
 		std::ofstream fin("./tests/generation_test/input_" + std::to_string(i) + ".in");
 		std::ofstream fout("./tests/generation_test/output_" + std::to_string(i) + ".out");
 		srand((unsigned int)time(NULL));
-		int a = rand() % 4000000 + 16; //размер кэша
-		cache_setup(&cache, a);
+		int a = random(16, 1000000); //размер кеша
 		std::cout << a << " ";
+		cache_setup(&cache, a);
 		fin << a << "\n";
-		int b = rand() % 1000 + 1; //количество операций
+		int b = random(1, 1000); //количество операций
 		std::cout << b << " ";
-		for (int i = 1; i <= b; i++) {
-			int c = rand() % 2 + 1;
-			std::cout << c << " ";
+		auto start1 = std::chrono::high_resolution_clock::now();
+		for (int i = 0; i < b; i++) {
+			int c = rand() % 2 + 1; //генерация операции
 			if (c == 1) {
-				fin << "alloc(" << i << ")\n";
-				void * ptr1 = cache_alloc(&cache);
-				mp[i] = ptr1;
-				std::cout << mp[i] << " ";
+				try {
+					fin << "alloc(" << i << ")\n";
+					void* ptr1 = cache_alloc(&cache);
+					mp[i] = ptr1;
+				}
+				catch (...) {
+					flag = true;
+					std::cout << "test " << i << ": error in execution. Error: unidentified problem " << std::endl;
+					break;
+				}
 			}
 			else if (c == 2) {
-				std::cout << mp.size() << " ";
 				if (mp.size() == 0) {
 					continue;
 				}
 				int d = rand() % mp.size();
-				std::cout << d << " ";
-				fin << "free(" << d << ")\n";
-				
-				cache_free(&cache, mp[d]);				
-				std::cout << mp[d] << " ";
-				mp.erase(d);
-
+				if (mp[d] == NULL) {
+					continue;
+				}
+				try {
+					fin << "free(" << d << ")\n";
+					cache_free(&cache, mp[d]);
+					mp.erase(d);
+				}
+				catch (...) {
+					flag = true;
+					std::cout << "test " << i << ": error in execution. Error: unidentified problem " << std::endl;
+					break;
+				}
 			}
 		}
-		cache_info_infile(&cache, i);
+		if (flag == false) {
+			auto end1 = std::chrono::high_resolution_clock::now();
+			auto dur1 = std::chrono::duration_cast<std::chrono::microseconds>(end1 - start1);
+			cache_generatinfo_infile(&cache, i);
+			std::cout << "test " << i << ": successful. time of work:" << dur1.count() << " ms." << std::endl;
+		}
 		cache_release(&cache);
 		fin.close();
 		fout.close();
@@ -244,7 +269,7 @@ int main()
 
 	//Test1();
 	/*Test(12);*/
-	generation_test(1);
+	generation_test(12);
 
 	return 0;
 }

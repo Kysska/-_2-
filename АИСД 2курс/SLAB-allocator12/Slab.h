@@ -36,3 +36,4 @@ void cache_info(cache* cache);
 void cache_info_infile(cache* cache, int k);
 void slab_info(cache* cache);
 void cache_allInfo(cache* cache);
+void cache_generatinfo_infile(cache* cache, int k);
